@@ -24,6 +24,7 @@ import { Room, Guest, FolioItem, RoomStatus } from '../../types/hotel';
 interface MobileCompanionModalProps {
   initialMode: 'staff' | 'guest';
   initialRoomNumber?: string;
+  initialTab?: 'key' | 'services' | 'folio';
   rooms: Room[];
   guests: Guest[];
   folios: FolioItem[];
@@ -37,6 +38,7 @@ interface MobileCompanionModalProps {
 export const MobileCompanionModal: React.FC<MobileCompanionModalProps> = ({
   initialMode,
   initialRoomNumber,
+  initialTab,
   rooms,
   guests,
   folios,
@@ -53,7 +55,7 @@ export const MobileCompanionModal: React.FC<MobileCompanionModalProps> = ({
     initialRoomNumber || '201'
   );
   const [keyNfcState, setKeyNfcState] = useState<'idle' | 'scanning' | 'unlocked'>('idle');
-  const [guestTab, setGuestTab] = useState<'key' | 'services' | 'folio'>('key');
+  const [guestTab, setGuestTab] = useState<'key' | 'services' | 'folio'>(initialTab || 'folio');
   const [serviceOrderFeedback, setServiceOrderFeedback] = useState<string | null>(null);
 
   // Staff view states
@@ -146,15 +148,38 @@ export const MobileCompanionModal: React.FC<MobileCompanionModalProps> = ({
           {mode === 'guest' ? (
             /* =================== GUEST MOBILE VIEW =================== */
             <div className="space-y-4 pb-16">
+              {/* QR Concierge & Folio Session Active Alert */}
+              <div className="bg-amber-400/10 border border-amber-400/30 rounded-xl p-2.5 flex items-center justify-between text-xs text-amber-300">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-medium">In-Room QR Concierge & Folio Verified</span>
+                </div>
+                <span className="font-mono text-[10px] text-amber-400/80">Room {activeGuestRoom.roomNumber}</span>
+              </div>
+
               {/* Hotel & Room Banner */}
               <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-800 rounded-2xl p-4">
                 <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span>ApexStay Luxury Cloud</span>
+                  <div className="flex items-center gap-1.5">
+                    <span>ApexStay Cloud</span>
+                    <span>·</span>
+                    <select
+                      value={activeGuestRoomNumber}
+                      onChange={(e) => setActiveGuestRoomNumber(e.target.value)}
+                      className="bg-slate-800 border border-slate-700 text-slate-200 text-[11px] rounded px-1.5 py-0.5 focus:outline-none"
+                    >
+                      {rooms.map(r => (
+                        <option key={r.id} value={r.roomNumber}>
+                          Room {r.roomNumber} ({r.category})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <span className="flex items-center gap-1 text-emerald-400 font-mono">
                     <Wifi className="w-3 h-3" /> Apex_Guest_5G
                   </span>
                 </div>
-                <div className="mt-2 flex items-center justify-between">
+                <div className="mt-2.5 flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-bold font-mono text-slate-100">
                       Room {activeGuestRoom.roomNumber}
@@ -164,7 +189,7 @@ export const MobileCompanionModal: React.FC<MobileCompanionModalProps> = ({
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="text-[11px] text-slate-400 block">Thermostat</span>
+                    <span className="text-[11px] text-slate-400 block">HVAC Climate</span>
                     <span className="text-sm font-mono font-bold text-slate-200">
                       {activeGuestRoom.temperature.toFixed(1)}°C
                     </span>

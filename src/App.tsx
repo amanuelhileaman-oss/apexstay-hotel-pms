@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header, ActiveTab } from './components/layout/Header';
 import { OverviewDashboard } from './components/dashboard/OverviewDashboard';
 import { RoomInventoryGrid } from './components/inventory/RoomInventoryGrid';
@@ -49,13 +49,39 @@ export default function App() {
 
   // Modal states
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const [mobileModalState, setMobileModalState] = useState<{ isOpen: boolean; mode: 'staff' | 'guest'; roomNumber?: string }>({
+  const [mobileModalState, setMobileModalState] = useState<{
+    isOpen: boolean;
+    mode: 'staff' | 'guest';
+    roomNumber?: string;
+    initialTab?: 'key' | 'services' | 'folio';
+  }>({
     isOpen: false,
     mode: 'staff',
   });
   const [isNewReservationOpen, setIsNewReservationOpen] = useState(false);
   const [reservationPresetRoom, setReservationPresetRoom] = useState<string | undefined>(undefined);
   const [isMfaModalOpen, setIsMfaModalOpen] = useState(false);
+
+  // Automatically parse URL parameters when a guest scans an in-room QR code
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const roomParam = params.get('room');
+      const portalParam = params.get('portal');
+      const actionParam = params.get('action');
+
+      if (roomParam && portalParam === 'guest') {
+        setMobileModalState({
+          isOpen: true,
+          mode: 'guest',
+          roomNumber: roomParam,
+          initialTab: actionParam === 'concierge_folio' ? 'folio' : 'key',
+        });
+      }
+    } catch (err) {
+      // Ignore URL parsing errors
+    }
+  }, []);
 
   // Helper to append audit log
   const logAuditEvent = (
@@ -480,6 +506,7 @@ export default function App() {
         <MobileCompanionModal
           initialMode={mobileModalState.mode}
           initialRoomNumber={mobileModalState.roomNumber}
+          initialTab={mobileModalState.initialTab}
           rooms={rooms}
           guests={guests}
           folios={folios}

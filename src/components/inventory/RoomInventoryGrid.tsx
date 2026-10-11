@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Room, RoomStatus, RoomCategory } from '../../types/hotel';
 import { RoomQrModal } from './RoomQrModal';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface RoomInventoryGridProps {
   rooms: Room[];
@@ -259,32 +260,69 @@ export const RoomInventoryGrid: React.FC<RoomInventoryGridProps> = ({
                   {room.category}
                 </div>
 
-                {/* Occupant or Arrival State */}
-                <div className="mt-3 py-2 border-t border-b border-slate-800/80">
-                  {room.guestName ? (
-                    <div>
-                      <div className="flex items-center gap-1.5 text-xs text-slate-200 font-medium truncate">
-                        <User className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                        <span className="truncate">{room.guestName}</span>
+                {/* Occupant / Booking State & In-Card Scannable QR Code */}
+                <div className="mt-3 py-2 border-t border-b border-slate-800/80 flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    {room.guestName ? (
+                      <div>
+                        <div className="flex items-center gap-1.5 text-xs text-slate-200 font-medium truncate">
+                          <User className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <span className="truncate">{room.guestName}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-400 mt-0.5 flex items-center justify-between">
+                          <span>{room.occupants} guest{room.occupants > 1 ? 's' : ''}</span>
+                          {room.checkOut && (
+                            <span>Departs: {room.checkOut.substring(5)}</span>
+                          )}
+                        </div>
+                        <div className="mt-1.5">
+                          <span className="text-[10px] text-emerald-400 font-mono">
+                            Folio QR Active
+                          </span>
+                        </div>
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5 flex items-center justify-between">
-                        <span>{room.occupants} guest{room.occupants > 1 ? 's' : ''}</span>
-                        {room.checkOut && (
-                          <span>Departs: {room.checkOut.substring(5)}</span>
-                        )}
+                    ) : room.status === 'Reserved' ? (
+                      <div>
+                        <div className="text-xs text-purple-300 flex items-center gap-1.5">
+                          <Key className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                          <span className="truncate">Reserved for Arrival</span>
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-1">
+                          Key encoded & ready
+                        </div>
                       </div>
+                    ) : (
+                      <div className="text-xs text-slate-400 flex flex-col justify-center">
+                        <span>Vacant ready</span>
+                        <span className="text-emerald-400 font-mono font-semibold mt-0.5">
+                          ${room.nightRate}/nt
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Generated In-Room QR Code thumbnail */}
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setQrModalRoom(room);
+                    }}
+                    className="shrink-0 flex flex-col items-center p-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-400 transition-colors cursor-pointer group/qr"
+                    title={`Scan with phone camera for Room ${room.roomNumber} digital concierge & folio`}
+                  >
+                    <div className="bg-white p-1 rounded shadow-inner">
+                      <QRCodeSVG
+                        value={`${window.location.origin}/?room=${room.roomNumber}&portal=guest&action=concierge_folio`}
+                        size={46}
+                        level="M"
+                        bgColor="#ffffff"
+                        fgColor="#020617"
+                      />
                     </div>
-                  ) : room.status === 'Reserved' ? (
-                    <div className="text-xs text-purple-300 flex items-center gap-1.5">
-                      <Key className="w-3.5 h-3.5 text-purple-400" />
-                      <span>Reserved for Arrival</span>
-                    </div>
-                  ) : (
-                    <div className="text-xs text-slate-400 flex items-center justify-between">
-                      <span>Ready for booking</span>
-                      <span className="text-emerald-400 font-mono">${room.nightRate}/nt</span>
-                    </div>
-                  )}
+                    <span className="text-[8px] font-mono text-amber-400/90 group-hover/qr:text-amber-300 mt-1 flex items-center gap-0.5 whitespace-nowrap">
+                      <QrCode className="w-2.5 h-2.5" /> Scan QR
+                    </span>
+                  </div>
                 </div>
               </div>
 
