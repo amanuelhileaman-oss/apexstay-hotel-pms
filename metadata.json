@@ -1,0 +1,6 @@
+{
+  "name": "ApexStay Hospitality Cloud",
+  "description": "Enterprise SaaS Hotel Management System with real-time room inventory, guest analytics, automated billing, channel booking sync, mobile staff/guest portals, E2EE security, MFA, and GDPR/CCPA audit governance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
