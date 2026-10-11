@@ -26,6 +26,7 @@ import {
   RoomStatus 
 } from './types/hotel';
 import { createAuditLogEntry } from './services/securityService';
+import { api } from './services/apiService';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
@@ -106,6 +107,7 @@ export default function App() {
     housekeeper?: string,
     notes?: string
   ) => {
+    // Optimistic UI update
     setRooms(prev =>
       prev.map(r => {
         if (r.id === roomId) {
@@ -123,6 +125,9 @@ export default function App() {
         return r;
       })
     );
+
+    // Call real backend route
+    api.updateRoomStatus(roomId, newStatus, housekeeper, notes);
 
     const room = rooms.find(r => r.id === roomId);
     logAuditEvent(
@@ -145,6 +150,7 @@ export default function App() {
         return r;
       })
     );
+    api.toggleDoorLock(roomId);
   };
 
   const handleUpdateTemperature = (roomId: string, delta: number) => {
@@ -157,6 +163,7 @@ export default function App() {
         return r;
       })
     );
+    api.updateTemperature(roomId, delta);
   };
 
   const handleAddFolioCharge = (item: Omit<FolioItem, 'id' | 'timestamp'>) => {
@@ -166,6 +173,13 @@ export default function App() {
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
     };
     setFolios(prev => [...prev, newItem]);
+    api.postFolioCharge({
+      roomNumber: item.roomNumber,
+      category: item.category,
+      description: item.description,
+      amount: item.amount,
+      guestId: item.guestId,
+    });
   };
 
   const handleSettleFolio = (roomNumber: string, paymentMethod: string) => {
@@ -177,6 +191,7 @@ export default function App() {
         return f;
       })
     );
+    api.settleFolio(roomNumber, paymentMethod);
   };
 
   const handleTriggerNightAudit = () => {
@@ -195,6 +210,7 @@ export default function App() {
     }));
 
     setFolios(prev => [...prev, ...newCharges]);
+    api.runNightAudit();
 
     logAuditEvent(
       'NIGHT_AUDIT_RUN',
@@ -259,6 +275,8 @@ export default function App() {
       })
     );
 
+    api.simulateOtaWebhook(channelName, assignedGuest, targetRoom.roomNumber);
+
     logAuditEvent(
       'OTA_SYNC_TRIGGERED',
       `Inbound reservation received from ${channelName} for Room ${targetRoom.roomNumber} (${assignedGuest}). Inventory adjusted to Reserved.`
@@ -296,6 +314,7 @@ export default function App() {
       ...prev,
       activeKeyVersion: nextVer,
     }));
+    api.rotateSecurityKey();
     logAuditEvent(
       'SECURITY_KEY_ROTATION',
       `Rotated master AES-256-GCM encryption cluster key to version ${nextVer}. HSM key derivation validated.`
@@ -319,6 +338,7 @@ export default function App() {
         return g;
       })
     );
+    api.forgetGuest(guestId);
 
     logAuditEvent(
       'GDPR_FORGET_REQUEST',
