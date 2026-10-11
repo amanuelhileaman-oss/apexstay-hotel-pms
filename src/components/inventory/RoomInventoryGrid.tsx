@@ -13,9 +13,11 @@ import {
   AlertTriangle, 
   X,
   CreditCard,
-  Plus
+  Plus,
+  QrCode
 } from 'lucide-react';
 import { Room, RoomStatus, RoomCategory } from '../../types/hotel';
+import { RoomQrModal } from './RoomQrModal';
 
 interface RoomInventoryGridProps {
   rooms: Room[];
@@ -25,6 +27,7 @@ interface RoomInventoryGridProps {
   onToggleDoorLock: (roomId: string) => void;
   onUpdateTemperature: (roomId: string, delta: number) => void;
   onOpenNewReservationForRoom?: (roomNumber: string) => void;
+  onOpenGuestPortal?: (roomNumber: string) => void;
 }
 
 export const RoomInventoryGrid: React.FC<RoomInventoryGridProps> = ({
@@ -35,11 +38,13 @@ export const RoomInventoryGrid: React.FC<RoomInventoryGridProps> = ({
   onToggleDoorLock,
   onUpdateTemperature,
   onOpenNewReservationForRoom,
+  onOpenGuestPortal,
 }) => {
   const [selectedFloor, setSelectedFloor] = useState<number | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<RoomStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [editNotes, setEditNotes] = useState('');
+  const [qrModalRoom, setQrModalRoom] = useState<Room | null>(null);
 
   // Filtered rooms
   const filteredRooms = rooms.filter(room => {
@@ -229,6 +234,17 @@ export const RoomInventoryGrid: React.FC<RoomInventoryGridProps> = ({
                     <span className="text-xl font-bold font-mono text-slate-100">
                       {room.roomNumber}
                     </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setQrModalRoom(room);
+                      }}
+                      className="p-1 rounded-md text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                      title="Generate In-Room Guest Folio & Concierge QR Code"
+                    >
+                      <QrCode className="w-3.5 h-3.5" />
+                    </button>
                     <span className="text-xs text-slate-400">
                       Floor {room.floor}
                     </span>
@@ -424,6 +440,30 @@ export const RoomInventoryGrid: React.FC<RoomInventoryGridProps> = ({
                 </div>
               </div>
 
+              {/* In-Room Digital Concierge & Folio QR Code Banner */}
+              <div className="bg-slate-800/40 border border-slate-800 hover:border-amber-400/40 rounded-xl p-4 flex items-center justify-between gap-3 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-amber-400/10 text-amber-400 flex items-center justify-center border border-amber-400/20 shrink-0">
+                    <QrCode className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold text-slate-200 block">
+                      In-Room Guest QR Standee
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      Digital folio, concierge orders & NFC key
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setQrModalRoom(selectedRoom)}
+                  className="px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold text-xs rounded-lg transition-colors cursor-pointer shrink-0"
+                >
+                  View QR Placard
+                </button>
+              </div>
+
               {/* Occupant Profile & Reservation Info */}
               {selectedRoom.guestName ? (
                 <div className="bg-slate-800/40 border border-slate-800 rounded-xl p-4 space-y-2">
@@ -503,6 +543,15 @@ export const RoomInventoryGrid: React.FC<RoomInventoryGridProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* In-Room Guest QR Code Modal */}
+      {qrModalRoom && (
+        <RoomQrModal
+          room={qrModalRoom}
+          onClose={() => setQrModalRoom(null)}
+          onOpenGuestPortal={onOpenGuestPortal || (() => {})}
+        />
       )}
     </div>
   );

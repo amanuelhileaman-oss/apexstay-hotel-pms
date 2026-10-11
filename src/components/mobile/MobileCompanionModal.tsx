@@ -23,6 +23,7 @@ import { Room, Guest, FolioItem, RoomStatus } from '../../types/hotel';
 
 interface MobileCompanionModalProps {
   initialMode: 'staff' | 'guest';
+  initialRoomNumber?: string;
   rooms: Room[];
   guests: Guest[];
   folios: FolioItem[];
@@ -35,6 +36,7 @@ interface MobileCompanionModalProps {
 
 export const MobileCompanionModal: React.FC<MobileCompanionModalProps> = ({
   initialMode,
+  initialRoomNumber,
   rooms,
   guests,
   folios,
@@ -47,7 +49,9 @@ export const MobileCompanionModal: React.FC<MobileCompanionModalProps> = ({
   const [mode, setMode] = useState<'staff' | 'guest'>(initialMode);
   
   // Guest view states
-  const [activeGuestRoomNumber, setActiveGuestRoomNumber] = useState<string>('201');
+  const [activeGuestRoomNumber, setActiveGuestRoomNumber] = useState<string>(
+    initialRoomNumber || '201'
+  );
   const [keyNfcState, setKeyNfcState] = useState<'idle' | 'scanning' | 'unlocked'>('idle');
   const [guestTab, setGuestTab] = useState<'key' | 'services' | 'folio'>('key');
   const [serviceOrderFeedback, setServiceOrderFeedback] = useState<string | null>(null);

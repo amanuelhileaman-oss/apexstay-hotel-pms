@@ -49,7 +49,7 @@ export default function App() {
 
   // Modal states
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const [mobileModalState, setMobileModalState] = useState<{ isOpen: boolean; mode: 'staff' | 'guest' }>({
+  const [mobileModalState, setMobileModalState] = useState<{ isOpen: boolean; mode: 'staff' | 'guest'; roomNumber?: string }>({
     isOpen: false,
     mode: 'staff',
   });
@@ -426,6 +426,9 @@ export default function App() {
               setReservationPresetRoom(roomNumber);
               setIsNewReservationOpen(true);
             }}
+            onOpenGuestPortal={(roomNumber) => {
+              setMobileModalState({ isOpen: true, mode: 'guest', roomNumber });
+            }}
           />
         )}
 
@@ -476,6 +479,7 @@ export default function App() {
       {mobileModalState.isOpen && (
         <MobileCompanionModal
           initialMode={mobileModalState.mode}
+          initialRoomNumber={mobileModalState.roomNumber}
           rooms={rooms}
           guests={guests}
           folios={folios}
